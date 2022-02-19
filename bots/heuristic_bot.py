@@ -140,7 +140,7 @@ def get_clusters_range(map, clusters, min_x, max_x, min_y, max_y, MINSIZE = 0):
                             x_values += i
                             y_values += j
                             num += 1
-                clusters[(float(x_values)/float(num), float(y_values)/float(num))] = result
+                clusters[int(float(x_values)/float(num)), int(float(y_values)/float(num))] = result
 
 #input: map, cluster = (i,j)
 #outputs: (x, y) coordinates of the tower that you should build
@@ -156,7 +156,7 @@ def try_towers(map, clusters, cluster, THRESHOLD = 0):
             x_values.add(i)
             y_values.add(j)
     clusters.pop(cluster)
-    # get_clusters_range(map, clusters, min(x_values), max(x_values)+1, min(y_values), max(y_values)+1)
+    get_clusters_range(map, clusters, min(x_values), max(x_values)+1, min(y_values), max(y_values)+1)
     return potential[1]
 
 ################################################################################
@@ -281,7 +281,10 @@ class MyPlayer(Player):
         x, y = cluster[0], cluster[1]
         population = clusters[cluster]
         distance = self.modV[x + (y * self.MAP_WIDTH)]
-        totalValue = population / distance
+        if distance != 0:
+          totalValue = population / distance
+        else:
+          totalValue = 0
         if bestCluster == None or totalValue > bestValue:
           bestCluster = (x, y)
           bestValue = totalValue
