@@ -54,7 +54,7 @@ def get_any_cluster(map, MINSIZE=0):
                             x_values += i
                             y_values += j
                             num += 1
-                clusters[(round(float(x_values)/float(num)), round(float(y_values)/float(num)))] = result
+                clusters[(int(float(x_values)/float(num)), int(float(y_values)/float(num)))] = result
     return clusters
 
 #returns True if we see other bot's structures in the radius (of the square), false o/w
@@ -155,8 +155,9 @@ def try_towers(map, clusters, cluster, THRESHOLD = 0):
         for j in range(width):
             x_values.add(i)
             y_values.add(j)
+    if clusters[cluster] > 10:
+      get_clusters_range(map, clusters, min(x_values), max(x_values)+1, min(y_values), max(y_values)+1)
     clusters.pop(cluster)
-    get_clusters_range(map, clusters, min(x_values), max(x_values)+1, min(y_values), max(y_values)+1)
     return potential[1]
 
 ################################################################################
