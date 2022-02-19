@@ -1,7 +1,6 @@
 import sys
 
 import random
-
 from src.player import *
 from src.structure import *
 from src.game_constants import GameConstants as GC
@@ -21,7 +20,6 @@ class MyPlayer(Player):
 
 
     def play_turn(self, turn_num, map, player_info):
-
 
         self.MAP_WIDTH = len(map)
         self.MAP_HEIGHT = len(map[0])

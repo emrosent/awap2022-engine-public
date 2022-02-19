@@ -11,7 +11,7 @@ class MyPlayer(Player):
     def __init__(self):
         print("Init")
         self.turn = 0
-
+        
         return
 
 
