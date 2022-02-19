@@ -15,6 +15,22 @@ def yoink(x, y, map):
     return map[x][y].population
   return 0
 
+def inRange(point,width,height):
+  x,y = point
+  return 0 <= x and x < width and 0 <= y and y < height
+
+#checks if a point is adjacent to any structure owned
+def isAdj(x,y,map,player_info):
+  checks = [(x,y+1),(x,y-1),(x-1,y),(x+1,y)]
+
+  for (cX,cY) in checks:
+    if inRange((cX,cY),len(map),len(map[0])) and map[cX][cY].structure != None and map[cX][cY].structure.team == player_info.team:
+      return True 
+
+  return False
+
+
+
 def get_potential(x, y, map):
   potential = 0
   m = [-1, 0, 1]
