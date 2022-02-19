@@ -54,14 +54,14 @@ def get_any_cluster(map, MINSIZE=0):
                             x_values += i
                             y_values += j
                             num += 1
-                clusters[(float(x_values)/float(num), float(y_values)/float(num))] = result
+                clusters[int((float(x_values)/float(num)), int(float(y_values)/float(num)))] = result
     return clusters
 
 #returns True if we see other bot's structures in the radius (of the square), false o/w
 def check_radius(map, team, center, CHECK_RADIUS):
-  for i in range(min(0, int(center[0]-CHECK_RADIUS)), max(int(center[0]+CHECK_RADIUS), len(map))):
-      for j in range(min(0, int(center[1]-CHECK_RADIUS)), max(int(center[1]+CHECK_RADIUS), len(map[0]))):
-          if map[i][j].team == (1-team): #TEAM = 0 or 1, so this is the opposite team (as opposed to neutral which is 2)
+  for i in range(max(0, int(center[0]-CHECK_RADIUS)), min(int(center[0]+CHECK_RADIUS), len(map))):
+      for j in range(max(0, int(center[1]-CHECK_RADIUS)), min(int(center[1]+CHECK_RADIUS), len(map[0]))):
+          if map[i][j].structure and map[i][j].structure.team != team: #TEAM = 0 or 1, so this is the opposite team (as opposed to neutral which is 2)
               return True
   return False
 
@@ -69,9 +69,12 @@ def check_radius(map, team, center, CHECK_RADIUS):
 #(ok, it's a square, not technically a circle.)
 #Does not return anything, but changes clusters and removes the ones that are no longer relevant.
 def update_clusters(map, team, clusters, CHECK_RADIUS=2):
+    clustersToKill = []
     for cluster in clusters.keys():
         if check_radius(map, team, cluster, CHECK_RADIUS):
-            clusters.pop(cluster) #removes the cluster
+            clustersToKill.append(cluster) #removes the cluster
+    for cluster in clustersToKill:
+      clusters.pop(cluster)
 
 def yoink(x, y, map):
   if x >= 0 and x < len(map) and y >= 0 and y < len(map[0]):
@@ -224,6 +227,7 @@ class MyPlayer(Player):
         self.roads = set()
         self.towers = set()
         self.currPath = []
+        self.clusters = dict()
         self.target_tower = None
         return
 
@@ -261,7 +265,7 @@ class MyPlayer(Player):
       # step 2. use heuristic to find the most valuable cluster
       bestCluster, bestValue = None, None
       for cluster in clusters:
-        x, y = round(cluster[0]), round(cluster[1])
+        x, y = cluster[0], cluster[1]
         population = clusters[cluster]
         distance = self.modV[x + (y * self.MAP_WIDTH)]
         totalValue = population / distance[0]
@@ -289,10 +293,10 @@ class MyPlayer(Player):
       self.set_dijkstra(map)
 
       # step 2. use heuristic to find the most valuable cluster
-      bestCluster = self.best_cluster(map, self.clusters)
+      self.bestCluster = self.best_cluster(map, self.clusters)
       
       # step 3. use try_towers to find the tower placement for that cluster
-      tower = try_towers(map, self.clusters, bestCluster)
+      tower = try_towers(map, self.clusters, self.bestCluster)
       self.target_tower = tower
 
     def play_turn(self, turn_num, map, player_info):
@@ -346,7 +350,8 @@ class MyPlayer(Player):
             if money < cost:
               break
             self.build(StructureType.TOWER, x, y)
-            self.towers.add(tileToBuy)
+            self.towers.add(self.target_tower)
+            self.clusters.pop(self.best_cluster)
             money -= cost
             self.set_target_tower(map)
             self.set_path(self.target_tower[0], self.target_tower[1])
