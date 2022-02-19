@@ -54,7 +54,7 @@ def get_any_cluster(map, MINSIZE=0):
                             x_values += i
                             y_values += j
                             num += 1
-                clusters[int((float(x_values)/float(num)), int(float(y_values)/float(num)))] = result
+                clusters[(round(float(x_values)/float(num)), round(float(y_values)/float(num)))] = result
     return clusters
 
 #returns True if we see other bot's structures in the radius (of the square), false o/w
@@ -75,6 +75,7 @@ def update_clusters(map, team, clusters, CHECK_RADIUS=2):
             clustersToKill.append(cluster) #removes the cluster
     for cluster in clustersToKill:
       clusters.pop(cluster)
+    print(clusters.size)
 
 def yoink(x, y, map):
   if x >= 0 and x < len(map) and y >= 0 and y < len(map[0]):
@@ -154,7 +155,8 @@ def try_towers(map, clusters, cluster, THRESHOLD = 0):
         for j in range(width):
             x_values.add(i)
             y_values.add(j)
-    get_clusters_range(map, clusters, min(x_values), max(x_values)+1, min(y_values), max(y_values)+1)
+    clusters.pop(cluster)
+    # get_clusters_range(map, clusters, min(x_values), max(x_values)+1, min(y_values), max(y_values)+1)
     return potential[1]
 
 ################################################################################
@@ -162,6 +164,7 @@ def try_towers(map, clusters, cluster, THRESHOLD = 0):
 ################################################################################
 ### BEGIN dijkstra.py
 ################################################################################
+
 
 class Dijkstra:
 
@@ -201,11 +204,11 @@ class Dijkstra:
             prev_nodes = dict()
 
             n = len(V) - 1
-            print(modV)
+            # print(modV)
             while n > 0:
                 curr,val = self.findMin(modV,seen)
                 
-                print(f"curr : {curr} val : {val}")
+                #print(f"curr : {curr} val : {val}")
                 neighbors = E[curr]
 
                 for neigh,val in neighbors:
@@ -222,7 +225,7 @@ class Dijkstra:
                 n -= 1
 
             #print(modV)
-            print(prev_nodes)
+            # print(prev_nodes)
             return prev_nodes,modV
 
 ################################################################################
@@ -248,8 +251,8 @@ class MyPlayer(Player):
         return 0 if st and st.team == self.team else map[x][y].passability
       V = []
       E = []
-      for x in range(self.MAP_WIDTH):
-        for y in range(self.MAP_HEIGHT):
+      for y in range(self.MAP_HEIGHT):
+        for x in range(self.MAP_WIDTH):
           edges = []
           V.append(x + (y * self.MAP_WIDTH))
           if (x != 0):
@@ -324,8 +327,9 @@ class MyPlayer(Player):
           self.generators = generators
           self.clusters = get_any_cluster(map)
           self.set_dijkstra(map)
+
         
-        update_clusters(map, self.team, self.clusters)
+        # update_clusters(map, self.team, self.clusters)
 
         if self.target_tower == None:
           self.set_target_tower(map)
@@ -335,7 +339,7 @@ class MyPlayer(Player):
         pprint(self.target_tower)
 
         money = player_info.money
-        doWeReverse = True
+        doWeReverse = False
         while True:
           if len(self.currPath) != 0:
             tileToBuy = self.currPath[0]
@@ -344,13 +348,13 @@ class MyPlayer(Player):
               x, y = y,x
             doWeReverse = not doWeReverse
             cost = StructureType.ROAD.get_base_cost() * map[x][y].passability
-            print(f"attempting to build road at: {x}, {y}")
-            print(f"current money: {money}")
+            # print(f"attempting to build road at: {x}, {y}")
+            # print(f"current money: {money}")
             if money < cost:
-              print("out of money, stopping for now\n")
+              # print("out of money, stopping for now\n")
               break
             money -= cost
-            print("buying!\n")
+            # print("buying!\n")
             self.build(StructureType.ROAD, x, y)
             self.roads.add(tileToBuy)
             self.currPath = self.currPath[1:]
@@ -361,7 +365,7 @@ class MyPlayer(Player):
               break
             self.build(StructureType.TOWER, x, y)
             self.towers.add(self.target_tower)
-            self.clusters.pop(self.best_cluster)
+            # self.clusters.pop(self.best_cluster)
             money -= cost
             self.set_target_tower(map)
             self.set_path(self.target_tower[0], self.target_tower[1])
