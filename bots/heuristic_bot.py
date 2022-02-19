@@ -153,11 +153,14 @@ def try_towers(map, clusters, cluster, THRESHOLD = 0):
     x_values, y_values = set(), set()
     for i in range(height):
         for j in range(width):
-            x_values.add(i)
-            y_values.add(j)
-    if clusters[cluster] > 10:
+            if map[i][j].population > 0:
+              x_values.add(i)
+              y_values.add(j)
+    if clusters[cluster] > 15:
+      clusters.pop(cluster)
       get_clusters_range(map, clusters, min(x_values), max(x_values)+1, min(y_values), max(y_values)+1)
-    clusters.pop(cluster)
+    else:
+      clusters.pop(cluster)
     return potential[1]
 
 ################################################################################
