@@ -336,6 +336,7 @@ class MyPlayer(Player):
         pprint(self.currPath)
         pprint(self.goal)
 
+        doWeReverse = True
         while True:
           if self.currPath:
             tileToBuy = self.currPath[0]
@@ -343,6 +344,9 @@ class MyPlayer(Player):
             cost = StructureType.ROAD.get_base_cost() * map[x][y].passability
             if player_info.money < cost:
               break
+            if doWeReverse:
+              x, y = y,x
+            doWeReverse = not doWeReverse
             print("building:")
             print(x)
             print(y)
