@@ -59,11 +59,11 @@ def get_any_cluster(map, MINSIZE=0):
 
 #returns True if we see other bot's structures in the radius (of the square), false o/w
 def check_radius(map, team, center, CHECK_RADIUS):
-    for i in range(min(0, center[0]-CHECK_RADIUS), max(center[0]+CHECK_RADIUS, len(map))):
-        for j in range(min(0, center[1]-CHECK_RADIUS), max(center[1]+CHECK_RADIUS, len(map[0]))):
-            if map[i][j].team == (1-team): #TEAM = 0 or 1, so this is the opposite team (as opposed to neutral which is 2)
-                return True
-    return False
+  for i in range(min(0, int(center[0]-CHECK_RADIUS)), max(int(center[0]+CHECK_RADIUS), len(map))):
+      for j in range(min(0, int(center[1]-CHECK_RADIUS)), max(int(center[1]+CHECK_RADIUS), len(map[0]))):
+          if map[i][j].team == (1-team): #TEAM = 0 or 1, so this is the opposite team (as opposed to neutral which is 2)
+              return True
+  return False
 
 #Parameters: map, the team you are on, the current clusters dictionary, and the radius you want to check
 #(ok, it's a square, not technically a circle.)
