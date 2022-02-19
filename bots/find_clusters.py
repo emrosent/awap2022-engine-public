@@ -64,4 +64,53 @@ def update_clusters(map, team, clusters, CHECK_RADIUS=2):
         if check_radius(map, team, cluster, CHECK_RADIUS):
             clusters.pop(cluster) #removes the cluster
 
+def yoink(x, y, map):
+  if x >= 0 and x < len(map) and y >= 0 and y < len(map[0]):
+    return map[x][y].population
+  return 0
+
+def get_potential(x, y, map):
+  potential = 0
+  m = [-1, 0, 1]
+  for i in m:
+    for j in m:
+      potential += yoink(x + i, y + j, map)
+  potential += yoink(x + 2, y, map)
+  potential += yoink(x - 2, y, map)
+  potential += yoink(x, y + 2, map)
+  potential += yoink(x, y - 2, map)
+  return potential
+
+def all_potentials(map):
+  potentials = [[0] * len(map[0])] * len(map)
+  for x in range(len(map)):
+    for y in range(len(map[0])):
+      potentials[x][y] = get_potential(x, y, map)
+  return potentials
+
+def potential_coords_max((pot1, c1), (pot2, c2)):
+    if (pot1 > pot2):
+        return (pot1, c1)
+    else:
+        return (pot2, c2)
+
+#returns coordinate in the cluster with the highest potential
+#seen : an array the same size as map that should be filled with None at first
+def try_towers_helper(map, seen, i, j, THRESHOLD=0):
+    seen[i][j] = True
+    tile = map[i][j]
+    potential = (0, (i,j))
+    if tile.structure == None:
+        if tile.population > THRESHOLD:
+            potential = (get_potential(i, j, map), (i,j))
+            if (i > 0 and not seen[i-1][j]):
+                potential = potential_coords_max(potential, (any_cluster_helper(map, seen, i-1, j), (i-1, j))
+            if (i < len(map)-1 and not seen[i+1][j]):
+                potential = potential_coords_max(potential, (any_cluster_helper(map, seen, i+1, j), (i+1, j))
+            if (j > 0 and not seen[i][j-1]):
+                potential = potential_coords_max(potential, (any_cluster_helper(map, seen, i, j-1), (i, j-1))
+            if (j < len(map[0])-1 and not seen[i][j+1]):
+                potential = potential_coords_max(potential, (any_cluster_helper(map, seen, i, j+1), (i, j+1))
+    return potential
+
 #def try_towers(map, cluster):
