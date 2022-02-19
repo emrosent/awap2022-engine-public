@@ -167,13 +167,13 @@ class MyPlayer(Player):
 
 
     def play_turn(self, turn_num, map, player_info):
-        if (turn_num == 0):
-            self.clusters = get_any_cluster(map)
-        v=list(self.clusters.values())
-        k=list(self.clusters.keys())
-        cluster = k[v.index(max(v))]
-        cluster = (int(cluster[0]), int(cluster[1]))
-        print(try_towers(map, self.clusters, cluster))
+        # if (turn_num == 0):
+        #     self.clusters = get_any_cluster(map)
+        # v=list(self.clusters.values())
+        # k=list(self.clusters.keys())
+        # cluster = k[v.index(max(v))]
+        # cluster = (int(cluster[0]), int(cluster[1]))
+        # print(try_towers(map, self.clusters, cluster))
 
         self.MAP_WIDTH = len(map)
         self.MAP_HEIGHT = len(map[0])
