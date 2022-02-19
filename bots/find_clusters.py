@@ -56,7 +56,12 @@ def check_radius(map, team, center, CHECK_RADIUS):
                 return True
     return False
 
+#Parameters: map, the team you are on, the current clusters dictionary, and the radius you want to check
+#(ok, it's a square, not technically a circle.)
+#Does not return anything, but changes clusters and removes the ones that are no longer relevant.
 def update_clusters(map, team, clusters, CHECK_RADIUS=2):
     for cluster in clusters.keys():
         if check_radius(map, team, cluster, CHECK_RADIUS):
             clusters.pop(cluster) #removes the cluster
+
+#def try_towers(map, cluster):
