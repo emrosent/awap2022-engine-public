@@ -59,11 +59,11 @@ def get_any_cluster(map, MINSIZE=0):
 
 #returns True if we see other bot's structures in the radius (of the square), false o/w
 def check_radius(map, team, center, CHECK_RADIUS):
-    for i in range(min(0, center[0]-CHECK_RADIUS), max(center[0]+CHECK_RADIUS, len(map))):
-        for j in range(min(0, center[1]-CHECK_RADIUS), max(center[1]+CHECK_RADIUS, len(map[0]))):
-            if map[i][j].team == (1-team): #TEAM = 0 or 1, so this is the opposite team (as opposed to neutral which is 2)
-                return True
-    return False
+  for i in range(min(0, int(center[0]-CHECK_RADIUS)), max(int(center[0]+CHECK_RADIUS), len(map))):
+      for j in range(min(0, int(center[1]-CHECK_RADIUS)), max(int(center[1]+CHECK_RADIUS), len(map[0]))):
+          if map[i][j].team == (1-team): #TEAM = 0 or 1, so this is the opposite team (as opposed to neutral which is 2)
+              return True
+  return False
 
 #Parameters: map, the team you are on, the current clusters dictionary, and the radius you want to check
 #(ok, it's a square, not technically a circle.)
@@ -234,11 +234,14 @@ class MyPlayer(Player):
         self.roads = set()
         self.towers = set()
         self.currPath = []
-        self.goal = None
+        self.target_tower = None
         return
 
     
     def set_dijkstra(self, map):
+      def get_weight(x, y):
+        st = map[x][y].structure
+        return 0 if st and st.team == self.team else map[x][y].passability
       V = []
       E = []
       for x in range(self.MAP_WIDTH):
@@ -247,16 +250,16 @@ class MyPlayer(Player):
           V.append(x + (y * self.MAP_WIDTH))
           if (x != 0):
             # go left
-            edges.append((x - 1 + (y * self.MAP_WIDTH), map[x-1][y].passability))
+            edges.append((x - 1 + (y * self.MAP_WIDTH), get_weight(x-1, y)))
           if (x + 1 != self.MAP_WIDTH):
             # go right
-            edges.append((x + 1 + (y * self.MAP_WIDTH), map[x+1][y].passability))
+            edges.append((x + 1 + (y * self.MAP_WIDTH), get_weight(x+1, y)))
           if (y != 0):
             # go up?
-            edges.append((x + ((y - 1) * self.MAP_WIDTH ), map[x][y-1].passability))
+            edges.append((x + ((y - 1) * self.MAP_WIDTH ), get_weight(x, y-1)))
           if (y + 1 != self.MAP_HEIGHT):
             # go down?
-            edges.append((x + ((y + 1) * self.MAP_WIDTH), map[x][y+1].passability))
+            edges.append((x + ((y + 1) * self.MAP_WIDTH), get_weight(x, y+1)))
           E.append(edges)
       
       (prev_nodes, modV) = Dijkstra.dijkstra(Dijkstra, self.generators[0], (V, E))
@@ -268,9 +271,6 @@ class MyPlayer(Player):
       # step 2. use heuristic to find the most valuable cluster
       bestCluster, bestValue = None, None
       for cluster in clusters:
-        
-        # raw = round(raw)
-        # x, y = raw % self.MAP_WIDTH, raw // self.MAP_WIDTH
         x, y = round(cluster[0]), round(cluster[1])
         population = clusters[cluster]
         distance = self.modV[x + (y * self.MAP_WIDTH)]
@@ -293,21 +293,24 @@ class MyPlayer(Player):
       path.pop()
       path.reverse()
       self.currPath = path
+    
+    def set_target_tower(self, map):
+      # need to calculate dijkstra's here
+      self.set_dijkstra(map)
 
+      # step 2. use heuristic to find the most valuable cluster
+      bestCluster = self.best_cluster(map, self.clusters)
+      
+      # step 3. use try_towers to find the tower placement for that cluster
+      tower = try_towers(map, self.clusters, bestCluster)
+      self.target_tower = tower
 
     def play_turn(self, turn_num, map, player_info):
-        # we will have the profit potential of each tile.
-        # we will be able to calculate the single-source shortest path
-        # to any point from the generator
-        # 
-        # so we run single-source shortest paths from the generators to find the
-        #   shortest paths to each tile.
-        # then we make a 2d array A that will essentially just be distance/profit
         self.MAP_WIDTH = len(map)
         self.MAP_HEIGHT = len(map[0])
 
         if turn_num == 0:
-          self.money = player_info.money
+          self.team = player_info.team
           generators = []
           for x in range(self.MAP_WIDTH):
             for y in range(self.MAP_HEIGHT):
@@ -315,37 +318,18 @@ class MyPlayer(Player):
               if structure and structure.team == player_info.team and structure.type == StructureType.GENERATOR:
                   generators.append(x + (y * self.MAP_WIDTH))
           self.generators = generators
+          self.clusters = get_any_cluster(map)
           self.set_dijkstra(map)
-          # heuristicArray = []
-          # # find the shortest path to each nonzero profit square from any generator
-          # for x in range(self.MAP_WIDTH):
-          #   row = []
-          #   for y in range(self.MAP_HEIGHT):
-          #     profit = get_potential(x, y, map)
-          #     distance = modV[x + (y * self.MAP_HEIGHT)]
-          #     row.append(profit / distance[0] if distance[0] != 0 else 0)
-          #   heuristicArray.append(row)
-          # self.heuristicArray = heuristicArray
+        
+        update_clusters(map, self.team, self.clusters)
 
-
-        # step 1. find the clusters (note: coordinates are unrounded)
-        #   looks like: {coordinate: population}
-        if self.goal == None:
-          # 
-          clusters = get_any_cluster(map)
-
-          # step 2. use heuristic to find the most valuable cluster
-          bestCluster = self.best_cluster(map, clusters)
-          
-
-          # step 3. use try_towers to find the tower placement for that cluster
-          tower = try_towers(map, clusters, bestCluster)
-
-          self.goal = tower
-          self.set_path(tower[0], tower[1])
+        if self.target_tower == None:
+          self.set_target_tower(map)
+          self.set_path(self.target_tower[0], self.target_tower[1])
 
         pprint(self.currPath)
-        pprint(self.goal)
+        pprint(self.target_tower)
+
         money = player_info.money
         doWeReverse = True
         while True:
@@ -359,24 +343,23 @@ class MyPlayer(Player):
             print(f"attempting to build road at: {x}, {y}")
             print(f"current money: {money}")
             if money < cost:
-              print("out of money, stopping for now")
+              print("out of money, stopping for now\n")
               break
             money -= cost
-            print("building:")
-            print(x)
-            print(y)
-            print()
-
+            print("buying!\n")
             self.build(StructureType.ROAD, x, y)
+            self.roads.add(tileToBuy)
             self.currPath = self.currPath[1:]
           else:
-            x, y = self.goal
+            x, y = self.target_tower
             cost = StructureType.ROAD.get_base_cost() * map[x][y].passability
             if money < cost:
               break
             self.build(StructureType.TOWER, x, y)
+            self.towers.add(tileToBuy)
             money -= cost
-            break
+            self.set_target_tower(map)
+            self.set_path(self.target_tower[0], self.target_tower[1])
     
 
 
