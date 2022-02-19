@@ -31,18 +31,32 @@ def any_cluster_helper(map, seen, current, i, j, THRESHOLD=0):
 #MINSIZE is the minimum size of the cluster you want
 def get_any_cluster(map, MINSIZE=0):
     clusters = dict()
-    for i in range(len(map)):
-        for j in range(len(map[0])):
-            current = np.full((len(map), len(map[0])), 0)
-            seen = np.full((len(map), len(map[0])), None)
+    height, width = len(map), len(map[0])
+    for i in range(height):
+        for j in range(width):
+            current = np.full((height, width), 0)
+            seen = np.full((height, width), None)
             result = any_cluster_helper(map, seen, current, i, j)
             if result > MINSIZE:
                 x_values, y_values, num = 0,0,0
-                for i in range(len(current)):
-                    for j in range(len(current[i])):
+                for i in range(height):
+                    for j in range(width):
                         if current[i][j] != 0:
                             x_values += i
                             y_values += j
                             num += 1
-                clusters[result] = (float(x_values)/float(num), float(y_values)/float(num))
+                clusters[(float(x_values)/float(num), float(y_values)/float(num))] = result
     return clusters
+
+#returns True if we see other bot's structures in the radius (of the square), false o/w
+def check_radius(map, team, center, CHECK_RADIUS):
+    for i in range(min(0, center[0]-CHECK_RADIUS), max(center[0]+CHECK_RADIUS, len(map))):
+        for j in range(min(0, center[1]-CHECK_RADIUS), max(center[1]+CHECK_RADIUS, len(map[0])):
+            if map[i][j].team == (1-team): #TEAM = 0 or 1, so this is the opposite team (as opposed to neutral which is 2)
+                return True
+    return False
+
+def update_clusters(map, team, clusters, CHECK_RADIUS=2):
+    for cluster in clusters.keys():
+        if check_radius(map, team, cluster, CHECK_RADIUS):
+            clusters.pop(cluster) #removes the cluster
