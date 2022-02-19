@@ -2,7 +2,6 @@ from math import trunc
 import sys
 
 import random
-from bots.find_clusters import get_any_cluster
 
 from src.player import *
 from src.structure import *
@@ -113,13 +112,13 @@ def try_towers_helper(map, seen, i, j, THRESHOLD=0):
     if tile.structure == None and tile.population > THRESHOLD:
         potential = (get_potential(i, j, map), (i,j))
         if (i > 0 and not seen[i-1][j]):
-            potential = potential_coords_max(potential, (any_cluster_helper(map, seen, i-1, j), (i-1, j)))
+            potential = potential_coords_max(potential, (try_towers_helper(map, seen, i-1, j)))
         if (i < len(map)-1 and not seen[i+1][j]):
-            potential = potential_coords_max(potential, (any_cluster_helper(map, seen, i+1, j), (i+1, j)))
+            potential = potential_coords_max(potential, (try_towers_helper(map, seen, i+1, j)))
         if (j > 0 and not seen[i][j-1]):
-            potential = potential_coords_max(potential, (any_cluster_helper(map, seen, i, j-1), (i, j-1)))
+            potential = potential_coords_max(potential, (try_towers_helper(map, seen, i, j-1)))
         if (j < len(map[0])-1 and not seen[i][j+1]):
-            potential = potential_coords_max(potential, (any_cluster_helper(map, seen, i, j+1), (i, j+1)))
+            potential = potential_coords_max(potential, (try_towers_helper(map, seen, i, j+1)))
     return potential
 
 def get_clusters_range(map, clusters, min_x, max_x, min_y, max_y, MINSIZE = 0):
@@ -256,14 +255,16 @@ class MyPlayer(Player):
 
 
     def best_cluster(self, map, clusters):
-
       # step 2. use heuristic to find the most valuable cluster
       bestCluster, bestValue = None, None
-      for (raw, population) in clusters:
-        raw = round(raw)
-        x, y = raw % self.MAP_WIDTH, raw // self.MAP_WIDTH
-        distance = self.modV[x + (y * self.MAP_HEIGHT)]
-        totalValue = distance[0] / population
+      for cluster in clusters:
+        
+        # raw = round(raw)
+        # x, y = raw % self.MAP_WIDTH, raw // self.MAP_WIDTH
+        x, y = round(cluster[0]), round(cluster[1])
+        population = clusters[cluster]
+        distance = self.modV[x + (y * self.MAP_WIDTH)]
+        totalValue = population / distance[0]
         if bestCluster == None or totalValue > bestValue:
           bestCluster = (x, y)
           bestValue = totalValue
@@ -301,7 +302,7 @@ class MyPlayer(Player):
             for y in range(self.MAP_HEIGHT):
               structure = map[x][y].structure
               if structure and structure.team == player_info.team and structure.type == StructureType.GENERATOR:
-                  generators.append(x + (y * self.MAP_HEIGHT))
+                  generators.append(x + (y * self.MAP_WIDTH))
           self.generators = generators
           self.set_dijkstra(map)
           # heuristicArray = []
@@ -319,6 +320,7 @@ class MyPlayer(Player):
         # step 1. find the clusters (note: coordinates are unrounded)
         #   looks like: {coordinate: population}
         if self.goal == None:
+          # 
           clusters = get_any_cluster(map)
 
           # step 2. use heuristic to find the most valuable cluster
@@ -332,6 +334,7 @@ class MyPlayer(Player):
           self.set_path(tower[0], tower[1])
 
         pprint(self.currPath)
+        pprint(self.goal)
 
         while True:
           if self.currPath:
