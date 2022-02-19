@@ -113,4 +113,35 @@ def try_towers_helper(map, seen, i, j, THRESHOLD=0):
                 potential = potential_coords_max(potential, (any_cluster_helper(map, seen, i, j+1), (i, j+1))
     return potential
 
-#def try_towers(map, cluster):
+def get_clusters_range(map, clusters, min_x, max_x, min_y, max_y):
+    height, width = len(map), len(map[0])
+    for i in range(min_x, max_x):
+        for j in range(min_y, max_y):
+            current = np.full((height, width), 0)
+            seen = np.full((height, width), None)
+            result = any_cluster_helper(map, seen, current, i, j)
+            if result > MINSIZE:
+                x_values, y_values, num = 0,0,0
+                for i in range(height):
+                    for j in range(width):
+                        if current[i][j] != 0:
+                            x_values += i
+                            y_values += j
+                            num += 1
+                clusters[(float(x_values)/float(num), float(y_values)/float(num))] = result
+
+#input: map, cluster = (i,j)
+#outputs: (x, y) coordinates of the tower that you should build
+#also updates clusters dictionary.
+def try_towers(map, clusters, cluster, THRESHOLD = 0):
+    height, width = len(map), len(map[0])
+    seen = np.full(height, width), None)
+    (i, j) = cluster
+    potential = try_towers(map, seen, i, j, THRESHOLD)
+    x_values, y_values = set(), set()
+    for i in range(height):
+        for j in range(width):
+            x_values.add(i)
+            y_values.add(j)
+    get_clusters_range(map, clusters, min(x_values), max(x_values), min(y_values), max(y_values))
+    return potential[1]
