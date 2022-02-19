@@ -275,7 +275,7 @@ class MyPlayer(Player):
     def set_path(self, x, y):
       src = self.generators[0]
       path = []
-      node = x + y * self.MAP_HEIGHT
+      node = x + y * self.MAP_WIDTH
       while node != src:
         prev_node = self.prev_nodes[node]
         path.append(prev_node)
@@ -297,6 +297,7 @@ class MyPlayer(Player):
         self.MAP_HEIGHT = len(map[0])
 
         if turn_num == 0:
+          self.money = player_info.money
           generators = []
           for x in range(self.MAP_WIDTH):
             for y in range(self.MAP_HEIGHT):
@@ -335,18 +336,22 @@ class MyPlayer(Player):
 
         pprint(self.currPath)
         pprint(self.goal)
-
+        money = player_info.money
         doWeReverse = True
         while True:
-          if self.currPath:
+          if len(self.currPath) != 0:
             tileToBuy = self.currPath[0]
             x, y = tileToBuy % self.MAP_WIDTH, tileToBuy // self.MAP_WIDTH
-            cost = StructureType.ROAD.get_base_cost() * map[x][y].passability
-            if player_info.money < cost:
-              break
             if doWeReverse:
               x, y = y,x
             doWeReverse = not doWeReverse
+            cost = StructureType.ROAD.get_base_cost() * map[x][y].passability
+            print(f"attempting to build road at: {x}, {y}")
+            print(f"current money: {money}")
+            if money < cost:
+              print("out of money, stopping for now")
+              break
+            money -= cost
             print("building:")
             print(x)
             print(y)
@@ -355,6 +360,12 @@ class MyPlayer(Player):
             self.build(StructureType.ROAD, x, y)
             self.currPath = self.currPath[1:]
           else:
+            x, y = self.goal
+            cost = StructureType.ROAD.get_base_cost() * map[x][y].passability
+            if money < cost:
+              break
+            self.build(StructureType.TOWER, x, y)
+            money -= cost
             break
     
 
