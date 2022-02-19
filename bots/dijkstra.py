@@ -52,6 +52,7 @@ class Dijkstra:
                     if seen[neigh] == 0: prev_nodes[neigh] = curr
                 
                 seen[curr] = 1
+                
                 n -= 1
 
 
